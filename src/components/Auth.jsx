@@ -15,24 +15,26 @@ export default function Auth() {
     const [age, setAge] = useState('')
 
     useEffect(() => {
+
         const channel = supabase
-            .channel('realtime users') // ตั้งชื่อ channel
-            .on(
-                'postgres_changes',
-                { event: '*', schema: 'public', table: 'users' }, // ฟังทุกการเปลี่ยนแปลงในตาราง 'users'
-                payload => {
-                    console.log('Change received!', payload)
-                    fetchUser() // เรียก fetchUser() เมื่อมีการเปลี่ยนแปลง
-                }
-            )
-            .subscribe()
+          .channel('public:users') // Replace 'your_table_name'
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'users' }, // Listen for all events on your table
+            (payload) => {
+              console.log('Change received!', payload);
+              
+              fetchUser();
+            }
+          )
+          .subscribe();
 
-        fetchUser(); // เรียกครั้งแรกตอน mount
-
+          fetchUser();
+        // Cleanup: Unsubscribe when the component unmounts
         return () => {
-            supabase.removeChannel(channel) // ลบ channel เมื่อคอมโพเนนต์ถูก unmount
-        }
-    }, [])
+          channel.unsubscribe();
+        };
+      }, []);
 
     useEffect(() => {
 
