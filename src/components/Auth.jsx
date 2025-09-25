@@ -18,19 +18,6 @@ export default function Auth() {
 
         fetchUser();
 
-        const channel = supabase
-            .channel('users-realtime')
-            .on('postgres_changes',
-                { event: '*', schema: 'public', table: 'users' },
-                (payload) => {
-                    // วิธีง่ายสุด: refetch ทุกครั้งที่มีการเปลี่ยนแปลง
-                    fetchUser();
-                }
-            )
-            .subscribe();
-
-        return () => supabase.removeChannel(channel);
-
     }, [])
 
     useEffect(() => {
