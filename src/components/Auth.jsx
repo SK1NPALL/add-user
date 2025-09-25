@@ -11,12 +11,25 @@ export default function Auth() {
 
     //for adduser
 
-    const [ name , setName ] = useState('')
-    const [ age , setAge] = useState('')
+    const [name, setName] = useState('')
+    const [age, setAge] = useState('')
 
     useEffect(() => {
 
         fetchUser();
+
+        const channel = supabase
+            .channel('users-realtime')
+            .on('postgres_changes',
+                { event: '*', schema: 'public', table: 'users' },
+                (payload) => {
+                    // วิธีง่ายสุด: refetch ทุกครั้งที่มีการเปลี่ยนแปลง
+                    fetchUser();
+                }
+            )
+            .subscribe();
+
+        return () => supabase.removeChannel(channel);
 
     }, [])
 
@@ -58,13 +71,13 @@ export default function Auth() {
 
         const { data, error } = await supabase
 
-            .from('users') 
+            .from('users')
 
             .insert([
                 { name: name, ages: age },
             ])
 
-            .select('*'); 
+            .select('*');
 
         if (error) {
 
@@ -85,13 +98,13 @@ export default function Auth() {
 
     const deleteUser = async (id) => {
 
-        const {error} = await supabase.from('users').delete().eq('id',id);
+        const { error } = await supabase.from('users').delete().eq('id', id);
 
         if (error) {
 
             console.error(error);
-        
-        }else {
+
+        } else {
 
             console.log('Delete User Complete!')
             setText('Delete User Complete!')
@@ -106,26 +119,26 @@ export default function Auth() {
         <>
             <form onSubmit={addUser}>
 
-                <input type="text" 
+                <input type="text"
 
                     placeholder='name'
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                
+
                 /><br />
 
-                <input type="number" 
+                <input type="number"
 
                     placeholder='age'
                     value={age}
                     onChange={(e) => setAge(e.target.value)}
-                    
-                    /><br /><br />
 
-                <input type="submit" value={'add'}/><br />
+                /><br /><br />
 
-            <br />
-            <b style={{color : 'red'}}>{text}</b>
+                <input type="submit" value={'add'} /><br />
+
+                <br />
+                <b style={{ color: 'red' }}>{text}</b>
 
             </form>
 
@@ -134,13 +147,13 @@ export default function Auth() {
                 cnt += 1
 
                 return (
-                <p key={userData.id}>  {cnt}: {userData.name} {userData.ages} 
-                <button onClick={() => deleteUser(userData.id)}> Delete </button></p>
+                    <p key={userData.id}>  {cnt}: {userData.name} {userData.ages}
+                        <button onClick={() => deleteUser(userData.id)}> Delete </button></p>
                 )
-                
+
             }) || 'Loading...'}
 
-            
+
 
         </>
     )
