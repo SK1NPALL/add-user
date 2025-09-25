@@ -15,31 +15,25 @@ export default function Auth() {
     const [age, setAge] = useState('')
 
     useEffect(() => {
-
-        const channel = supabase
-          .channel('public:users') // Replace 'your_table_name'
-          .on(
-            'postgres_changes',
-            { event: '*', schema: 'public', table: 'users' }, // Listen for all events on your table
-            (payload) => {
-              console.log('Change received!', payload);
-              
-              fetchUser();
-            }
-          )
-          .subscribe();
-
+          
           fetchUser();
         // Cleanup: Unsubscribe when the component unmounts
-        return () => {
-          channel.unsubscribe();
-        };
+
       }, []);
 
     useEffect(() => {
 
         console.log(user)
-
+        .channel('public:users') // Replace 'your_table_name'
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'users' }, // Listen for all events on your table
+            (payload) => {
+              console.log('Change received!', payload);
+              fetchUser();
+            }
+          )
+          .subscribe();
 
     }, [user])
 
