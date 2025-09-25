@@ -15,25 +15,25 @@ export default function Auth() {
     const [age, setAge] = useState('')
 
     useEffect(() => {
-          
-          fetchUser();
-        // Cleanup: Unsubscribe when the component unmounts
+        
+        const channel = supabase
+            .channel('public:users')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, () => {
+                fetchUser();
+            })
+            .subscribe();
 
-      }, []);
+        fetchUser(); // ดึงรอบแรกตอน mount
+
+        return () => {
+            supabase.removeChannel(channel); // ✅ v2
+        };
+    }, []);
 
     useEffect(() => {
 
         console.log(user)
-        .channel('public:users') // Replace 'your_table_name'
-          .on(
-            'postgres_changes',
-            { event: '*', schema: 'public', table: 'users' }, // Listen for all events on your table
-            (payload) => {
-              console.log('Change received!', payload);
-              fetchUser();
-            }
-          )
-          .subscribe();
+
 
     }, [user])
 
@@ -88,8 +88,6 @@ export default function Auth() {
 
             setName('')
             setAge('')
-
-            fetchUser();
         }
     };
 
@@ -106,7 +104,6 @@ export default function Auth() {
             console.log('Delete User Complete!')
             setText('Delete User Complete!')
 
-            fetchUser();
 
         }
 
